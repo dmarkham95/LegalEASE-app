@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: backend
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_HOST=database
+      - DATABASE_USER=legalease
+      - DATABASE_PASSWORD=legalease
+      - DATABASE_NAME=legalease
+      - DATABASE_PORT=3306
+    depends_on:
+      - database
+    volumes:
+      - ./backend:/app
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    environment:
+      - VITE_APP_API_URL=http://backend:3000/api
+    volumes:
+      - ./frontend:/app
+    networks:
+      - app-network
+
+  database:
+    build:
+      context: ./database
+    container_name: database
+    environment:
+      MYSQL_ROOT_PASSWORD: legalease
+      MYSQL_DATABASE: legalease
+      MYSQL_USER: legalease
+      MYSQL_PASSWORD: legalease
+    ports:
+      - "3310:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - app-network
+  
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    environment:
+      PMA_HOST: database
+      MYSQL_ROOT_PASSWORD: legalease
+    ports:
+      - "8081:80"  # phpMyAdmin is exposed on port 8081
+    depends_on:
+      - database
+    networks:
+      - app-network
+volumes:
+  db_data:
+
+networks:
+  app-network:
